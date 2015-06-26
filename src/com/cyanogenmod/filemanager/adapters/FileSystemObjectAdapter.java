@@ -78,6 +78,7 @@ public class FileSystemObjectAdapter
         ImageButton mBtCheck;
         ImageView mIvIcon;
         TextView mTvName;
+        TextView mTvCnName;
         TextView mTvSummary;
         TextView mTvSize;
         Boolean mHasSelectedBg;
@@ -97,7 +98,7 @@ public class FileSystemObjectAdapter
         Drawable mDwCheck;
         Drawable mDwIcon;
         String mName;
-        String mDirPath;
+        String mCnName;
         String mSummary;
         String mSize;
     }
@@ -122,6 +123,8 @@ public class FileSystemObjectAdapter
     private static final int RESOURCE_ITEM_SUMMARY = R.id.navigation_view_item_summary;
     //The resource of the item size information
     private static final int RESOURCE_ITEM_SIZE = R.id.navigation_view_item_size;
+
+    private static final int RESOURCE_ITEM_CNNAME = R.id.navigation_view_item_cnname;
 
     private String sdPath = Environment.getExternalStorageDirectory().getAbsolutePath();
 
@@ -216,7 +219,6 @@ public class FileSystemObjectAdapter
     private void processData() {
         Theme theme = ThemeManager.getCurrentTheme(getContext());
         Resources res = getContext().getResources();
-        AppDirNameHelper appDirNameHelper = new AppDirNameHelper(getContext());
         int cc = getCount();
 
         this.mData = new DataHolder[cc];
@@ -252,7 +254,8 @@ public class FileSystemObjectAdapter
             this.mData[i].mDwIcon = this.mIconHolder.getDrawable(
                     MimeTypeHelper.getIcon(getContext(), fso));
             this.mData[i].mName = fso.getName();
-            this.mData[i].mDirPath = fso.getFullPath().replace(sdPath,"");
+            this.mData[i].mCnName = AppDirNameHelper.dirCnNameMap.get(fso.getFullPath().replace(sdPath,"")) == null ?
+                                "" : AppDirNameHelper.dirCnNameMap.get(fso.getFullPath().replace(sdPath,""));
             this.mData[i].mSummary = sbSummary.toString();
             this.mData[i].mSize = FileHelper.getHumanReadableSize(fso);
         }
@@ -275,6 +278,7 @@ public class FileSystemObjectAdapter
             ViewHolder viewHolder = new FileSystemObjectAdapter.ViewHolder();
             viewHolder.mIvIcon = (ImageView)v.findViewById(RESOURCE_ITEM_ICON);
             viewHolder.mTvName = (TextView)v.findViewById(RESOURCE_ITEM_NAME);
+            viewHolder.mTvCnName = (TextView)v.findViewById(RESOURCE_ITEM_CNNAME);
             viewHolder.mTvSummary = (TextView)v.findViewById(RESOURCE_ITEM_SUMMARY);
             viewHolder.mTvSize = (TextView)v.findViewById(RESOURCE_ITEM_SIZE);
             if (!this.mPickable) {
@@ -294,7 +298,7 @@ public class FileSystemObjectAdapter
         final DataHolder dataHolder = this.mData[position];
 
         //Retrieve the view holder
-        final ViewHolder viewHolder = (ViewHolder)v.getTag();
+        ViewHolder viewHolder = (ViewHolder)v.getTag();
         if (this.mPickable) {
             theme.setBackgroundDrawable(getContext(), v, "background_drawable"); //$NON-NLS-1$
         }
@@ -307,14 +311,10 @@ public class FileSystemObjectAdapter
         mIconHolder.loadDrawable(viewHolder.mIvIcon, getItem(position), dataHolder.mDwIcon);
 
         viewHolder.mTvName.setText(dataHolder.mName);
-        new Handler().post(new Runnable() {
-            @Override
-            public void run() {
-                String appName = AppDirNameHelper.getAppName(dataHolder.mDirPath);
-                viewHolder.mTvName.setText(dataHolder.mName+appName);
-            }
-        });
-
+        if (viewHolder.mTvCnName != null) {
+            viewHolder.mTvCnName.setText(dataHolder.mCnName);
+            theme.setTextColor(getContext(), viewHolder.mTvCnName, "text_color"); //$NON-NLS-1$
+        }
         theme.setTextColor(getContext(), viewHolder.mTvName, "text_color"); //$NON-NLS-1$
         if (viewHolder.mTvSummary != null) {
             viewHolder.mTvSummary.setText(dataHolder.mSummary);

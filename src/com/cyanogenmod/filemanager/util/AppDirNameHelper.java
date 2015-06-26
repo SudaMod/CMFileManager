@@ -28,7 +28,7 @@ public final class AppDirNameHelper {
     private static Context ct;
     private static DBHelper dbHelper;
     private static SQLiteDatabase db;
-    private static String appName;
+    public static HashMap<String,String> dirCnNameMap;
 
     public AppDirNameHelper(Context ct) {
         this.ct = ct;
@@ -41,15 +41,16 @@ public final class AppDirNameHelper {
         }
     }
 
-    public static String getAppName(String dirName) {
+    public static void setDirCnNameMap() {
+        dirCnNameMap = new HashMap<String,String>();
         db = dbHelper.getWritableDatabase();
-        Cursor cursor = db.query("dir_name", null, "path=?",
-                    new String[]{dirName}, null, null, null);
-
-        appName = cursor.moveToFirst() ? "|" + cursor.getString(cursor.getColumnIndex("name")) : "";
+        Cursor mCursor = db.query("dir_name", null, null,
+                    null, null, null, null);
+        while (mCursor.moveToNext()) {
+            dirCnNameMap.put(mCursor.getString(mCursor.getColumnIndex("path")),
+                           " | " + mCursor.getString(mCursor.getColumnIndex("name")));
+        }
         db.close();
-        return appName;
     }  
-
 
 }
