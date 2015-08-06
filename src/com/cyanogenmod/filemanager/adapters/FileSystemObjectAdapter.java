@@ -212,7 +212,8 @@ public class FileSystemObjectAdapter
 
         FileSystemObject fso = getItem(position);
 
-        Drawable dwIcon = this.mIconHolder.getDrawable(MimeTypeHelper.getIcon(getContext(), fso));
+        Drawable dwIcon = this.mIconHolder.getDrawable(
+                MimeTypeHelper.getIcon(getContext(), fso, true));
         mIconHolder.loadDrawable(viewHolder.mIvIcon, fso, dwIcon);
         viewHolder.mTvName.setText(fso.getName());
         String mCnName = AppDirNameHelper.dirCnNameMap.get(fso.getFullPath().replace(sdPath,"")) == null ?

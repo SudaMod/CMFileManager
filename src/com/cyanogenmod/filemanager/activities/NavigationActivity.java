@@ -297,6 +297,20 @@ public class NavigationActivity extends Activity
                     }
 
                 } else if (intent.getAction().compareTo(
+                        FileManagerSettings.INTENT_FILE_CHANGED) == 0) {
+                    // Retrieve the file that was changed
+                    String file =
+                            intent.getStringExtra(FileManagerSettings.EXTRA_FILE_CHANGED_KEY);
+                    try {
+                        FileSystemObject fso = CommandHelper.getFileInfo(context, file, null);
+                        if (fso != null) {
+                            getCurrentNavigationView().refresh(fso);
+                        }
+                    } catch (Exception e) {
+                        ExceptionUtil.translateException(context, e, true, false);
+                    }
+
+                } else if (intent.getAction().compareTo(
                         FileManagerSettings.INTENT_THEME_CHANGED) == 0) {
                     applyTheme();
 
@@ -630,6 +644,7 @@ public class NavigationActivity extends Activity
         if (curDir != null) {
             VirtualMountPointConsole vc = VirtualMountPointConsole.getVirtualConsoleForPath(
                     mNavigationViews[mCurrentNavigationView].getCurrentDir());
+            getCurrentNavigationView().refresh(true);
             if (vc != null && !vc.isMounted()) {
                 onRequestBookmarksRefresh();
                 removeUnmountedHistory();
@@ -639,6 +654,7 @@ public class NavigationActivity extends Activity
                 intent.putExtra(EXTRA_ADD_TO_HISTORY, false);
                 initNavigation(NavigationActivity.this.mCurrentNavigationView, false, intent);
             }
+            getCurrentNavigationView().refresh(true);
         }
     }
 
@@ -1927,6 +1943,10 @@ public class NavigationActivity extends Activity
                         if (searchInfo != null && searchInfo.isSuccessNavigation()) {
                             //Navigate to previous history
                             back();
+                        } else {
+                            // I don't know is the search view was changed, so try to do a refresh
+                            // of the navigation view
+                            getCurrentNavigationView().refresh(true);
                         }
                     }
                     // reset bookmarks list to default as the user could have set a
@@ -1963,6 +1983,13 @@ public class NavigationActivity extends Activity
      */
     @Override
     public void onRequestRefresh(Object o, boolean clearSelection) {
+        if (o instanceof FileSystemObject) {
+            // Refresh only the item
+            this.getCurrentNavigationView().refresh((FileSystemObject)o);
+        } else if (o == null) {
+            // Refresh all
+            getCurrentNavigationView().refresh();
+        }
         if (clearSelection) {
             this.getCurrentNavigationView().onDeselectAll();
         }
@@ -1982,8 +2009,13 @@ public class NavigationActivity extends Activity
     @Override
     public void onRequestRemove(Object o, boolean clearSelection) {
         if (o instanceof FileSystemObject) {
+            // Remove from view
+            this.getCurrentNavigationView().removeItem((FileSystemObject)o);
+
             //Remove from history
             removeFromHistory((FileSystemObject)o);
+        } else {
+            onRequestRefresh(null, clearSelection);
         }
         if (clearSelection) {
             this.getCurrentNavigationView().onDeselectAll();
@@ -2314,35 +2346,41 @@ public class NavigationActivity extends Activity
         return false;
     }
 
-    /**
-     * Method that opens the actions dialog
-     *
-     * @param item The path or the {@link FileSystemObject}
-     * @param global If the menu to display is the one with global actions
-     */
-    private void openActionsDialog(Object item, boolean global) {
-        // Resolve the full path
-        String path = String.valueOf(item);
-        if (item instanceof FileSystemObject) {
-            path = ((FileSystemObject)item).getFullPath();
-        }
-
-        // Prior to show the dialog, refresh the item reference
+    private void openActionsDialog(String path, boolean global) {
         FileSystemObject fso = null;
         try {
             fso = CommandHelper.getFileInfo(this, path, false, null);
             if (fso == null) {
                 throw new NoSuchFileOrDirectory(path);
             }
-
+            openActionsDialog(fso, global);
         } catch (Exception e) {
-            // Do nothing, objects should be removed by the FileObserver in NavigationView
+            // Notify the user
             ExceptionUtil.translateException(this, e);
+
+            // Remove the object
+            if (e instanceof FileNotFoundException || e instanceof NoSuchFileOrDirectory) {
+                // If have a FileSystemObject reference then there is no need to search
+                // the path (less resources used)
+                getCurrentNavigationView().removeItem(path);
+            }
             return;
         }
+    }
+
+    /**
+     * Method that opens the actions dialog
+     *
+     * @param item The path or the {@link FileSystemObject}
+     * @param global If the menu to display is the one with global actions
+     */
+    private void openActionsDialog(FileSystemObject item, boolean global) {
+        // We used to refresh the item reference here, but the access to the SecureConsole is synchronized,
+        // which can/will cause on ANR in certain scenarios.  We don't care if it doesn't exist anymore really
+        // For this to work, SecureConsole NEEDS to be refactored.
 
         // Show the dialog
-        ActionsDialog dialog = new ActionsDialog(this, this, fso, global, false);
+        ActionsDialog dialog = new ActionsDialog(this, this, item, global, false);
         dialog.setOnRequestRefreshListener(this);
         dialog.setOnSelectionListener(getCurrentNavigationView());
         dialog.show();
