@@ -184,6 +184,9 @@ public final class FileManagerApplication extends Application {
         MimeTypeIndexService.indexFileRoot(this, externalStorage.getAbsolutePath());
         MimeTypeIndexService.indexFileRoot(this, Environment.getRootDirectory().getAbsolutePath());
 
+        AppDirNameHelper appDirNameHelper = new AppDirNameHelper(getApplicationContext());
+        appDirNameHelper.setDirCnNameMap();
+
         // Schedule in case not scheduled (i.e. never booted with this app on device
         SecureCacheCleanupService.scheduleCleanup(getApplicationContext());
 
