@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.os.Environment;
+import android.os.storage.StorageVolume;
 import android.util.Log;
 
 import com.cyanogenmod.filemanager.console.Console;
@@ -41,8 +42,9 @@ import com.cyanogenmod.filemanager.ui.ThemeManager;
 import com.cyanogenmod.filemanager.ui.ThemeManager.Theme;
 import com.cyanogenmod.filemanager.util.AIDHelper;
 import com.cyanogenmod.filemanager.util.AndroidHelper;
-import com.cyanogenmod.filemanager.util.MimeTypeHelper;
 import com.cyanogenmod.filemanager.util.AppDirNameHelper;
+import com.cyanogenmod.filemanager.util.MimeTypeHelper;
+import com.cyanogenmod.filemanager.util.StorageHelper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -184,6 +186,11 @@ public final class FileManagerApplication extends Application {
         File externalStorage = Environment.getExternalStorageDirectory();
         MimeTypeIndexService.indexFileRoot(this, externalStorage.getAbsolutePath());
         MimeTypeIndexService.indexFileRoot(this, Environment.getRootDirectory().getAbsolutePath());
+        StorageVolume[] storageVolumes = StorageHelper.getStorageVolumes(this, true);
+        for (StorageVolume storageVolume : storageVolumes) {
+            MimeTypeIndexService.indexFileRoot(this, storageVolume.getPath());
+        }
+
 
         AppDirNameHelper appDirNameHelper = new AppDirNameHelper(getApplicationContext());
         appDirNameHelper.setDirCnNameMap();
