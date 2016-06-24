@@ -472,8 +472,8 @@ public final class MimeTypeHelper {
         MimeTypeInfo mimeTypeInfo = null;
         ArrayList<MimeTypeInfo> mimeTypeInfoList = sMimeTypes.get(ext.toLowerCase(Locale.ROOT));
         // Multiple mimetypes map to the same extension, try to resolve it.
-        if (mimeTypeInfoList != null && mimeTypeInfoList.size() > 1 && !firstFound) {
-            if (absolutePath != null) {
+        if (mimeTypeInfoList != null && mimeTypeInfoList.size() > 1) {
+            if ((absolutePath != null) && (!firstFound)) {
                 String mimeType = getAmbiguousExtensionMimeType(absolutePath, ext);
                 mimeTypeInfo = sExtensionMimeTypes.get(ext + mimeType);
             } else {
@@ -491,7 +491,7 @@ public final class MimeTypeHelper {
     private static final String getMimeTypeFromExtension(final FileSystemObject fso) {
         String ext = FileHelper.getExtension(fso);
         if (ext == null) {
-            return null;
+            return "application/octet-stream";
         }
 
         // If this extension is ambiguous, attempt to resolve it.
@@ -503,7 +503,7 @@ public final class MimeTypeHelper {
         //Load from the database of mime types
         MimeTypeInfo mimeTypeInfo = getMimeTypeInternal(fso, ext);
         if (mimeTypeInfo == null) {
-            return null;
+            return "application/octet-stream";
         }
 
         return mimeTypeInfo.mMimeType;
