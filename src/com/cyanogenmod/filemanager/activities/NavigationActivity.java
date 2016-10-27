@@ -206,8 +206,8 @@ public class NavigationActivity extends Activity
     private SearchView mSearchView;
     private NavigationCustomTitleView mCustomTitleView;
     private InputMethodManager mImm;
-    private FilesystemInfoDialog.OnConfigChangeListener mOnConfigChangeListener;
     private ListPopupWindow mPopupWindow;
+    private ActionsDialog mActionsDialog;
 
     private final BroadcastReceiver mNotificationReceiver = new BroadcastReceiver() {
         @Override
@@ -805,9 +805,6 @@ public class NavigationActivity extends Activity
             if (mDrawerToggle != null ) {
                 mDrawerToggle.onConfigurationChanged(newConfig);
             }
-        }
-        if (mActiveDialog != null && mOnConfigChangeListener != null) {
-            mOnConfigChangeListener.onConfigurationChanged(newConfig);
         }
         NavigationView navView = getCurrentNavigationView();
         if (navView != null) {
@@ -2305,13 +2302,6 @@ public class NavigationActivity extends Activity
                 }
             }
         });
-        mOnConfigChangeListener = dialog.getOnConfigChangeListener();
-        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-                mOnConfigChangeListener = null;
-            }
-        });
         dialog.show();
     }
 
@@ -2530,10 +2520,13 @@ public class NavigationActivity extends Activity
         // For this to work, SecureConsole NEEDS to be refactored.
 
         // Show the dialog
-        ActionsDialog dialog = new ActionsDialog(this, this, item, global, false);
-        dialog.setOnRequestRefreshListener(this);
-        dialog.setOnSelectionListener(getCurrentNavigationView());
-        dialog.show();
+        if (mActionsDialog != null && mActionsDialog.isShowing()) {
+            return;
+        }
+        mActionsDialog = new ActionsDialog(this, this, item, global, false);
+        mActionsDialog.setOnRequestRefreshListener(this);
+        mActionsDialog.setOnSelectionListener(getCurrentNavigationView());
+        mActionsDialog.show();
     }
 
     /**
