@@ -21,6 +21,8 @@
 
   <original-package android:name="com.cyanogenmod.filemanager" />
 
+  <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="23" />
+
   <uses-feature android:name="android.software.leanback"
     android:required="false" />
 
@@ -75,16 +77,6 @@
     <provider
       android:authorities="com.cyanogenmod.filemanager.providers.index"
       android:name=".providers.MimeTypeIndexProvider"/>
-
-    <provider
-      android:name="android.support.v4.content.FileProvider"
-      android:authorities="com.cyanogenmod.filemanager.providers.file"
-      android:exported="false"
-      android:grantUriPermissions="true">
-        <meta-data
-          android:name="android.support.FILE_PROVIDER_PATHS"
-          android:resource="@xml/provider_paths" />
-    </provider>
 
     <service
       android:name=".service.MimeTypeIndexService"
